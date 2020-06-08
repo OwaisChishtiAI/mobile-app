@@ -126,46 +126,64 @@ def face_percentage(ref, unk):
 	res = api.face_distance([ref], unk)[0]
 	return res
 
-def evaluation():
+def evaluation(casenicf, casenicb, casevideo, caseselfie):
 	print("Evaluating...")
 	results = {"nic-nic" : None, "nic-video" : [], "nicF-selfie" : None, "nicB-selfie" : None}
-	nicF = np.load("face_data/nicfront.npy")
-	nicB = np.load("face_data/nicback.npy")
+	if casenicf == "true":
+		nicF = np.load("face_data/nicfront.npy")
+	if casenicb == "true":
+		nicB = np.load("face_data/nicback.npy")
+	if (casenicf == "true") and (casenicb == "true"):
+		results["nic-nic"] = face_percentage(nicF, nicB)
 	cap = cv2.VideoCapture("face_data/video.mp4")
 	selfie = np.load("face_data/selfie.npy")
-	results["nic-nic"] = face_percentage(nicF, nicB)
-	results["nicF-selfie"] = face_percentage(nicF, selfie)
-	results["nicB-selfie"] = face_percentage(nicB, selfie)
+	
+	if (casenicf == "true") and (caseselfie == "true"):
+		results["nicF-selfie"] = face_percentage(nicF, selfie)
+	if (casenicb == "true") and (caseselfie == "true"):
+		results["nicB-selfie"] = face_percentage(nicB, selfie)
 	frames = 0
-	while cap.isOpened():
-		try:
-			ret,frame = cap.read()
-			_ = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-			if cv2.waitKey(10) & 0xFF == ord('q'):
-				quit()
+	if (casevideo == "true") and (casenicf == "true"):
+		while cap.isOpened():
 			try:
-				if frames % 4 == 0:
-					ifFace = api.face_encodings(frame, num_jitters=50, model="large")[0]
-					perc = face_percentage(nicF, ifFace)
-					results["nic-video"].append(perc)
+				ret,frame = cap.read()
+				_ = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+				if cv2.waitKey(10) & 0xFF == ord('q'):
+					quit()
+				try:
+					if frames % 4 == 0:
+						ifFace = api.face_encodings(frame, num_jitters=50, model="large")[0]
+						perc = face_percentage(nicF, ifFace)
+						results["nic-video"].append(perc)
+				except Exception as e:
+					pass
+				
 			except Exception as e:
 				pass
+				cap.release()
+				cv2.destroyAllWindows()
+				# pass
+			frames += 1
 			
-		except Exception as e:
-			pass
-			cap.release()
-			cv2.destroyAllWindows()
-			# pass
-		frames += 1
-		
-			
-	cap.release()
-	cv2.destroyAllWindows()
+				
+		cap.release()
+		cv2.destroyAllWindows()
+		results["nic-video"] = sum(results["nic-video"]) / len(results["nic-video"])
 
-	results["nic-video"] = sum(results["nic-video"]) / len(results["nic-video"])
+	if isinstance(results["nic-video"], list):
+		results["nic-video"] = None
+	empty_data_keys = []
 	for key in results.keys():
-		results[key] = round(face_distance_to_conf(results[key]) * 100)
-	print("Evaluation Completed.")
+		# print(key, results[key])
+		if (results[key] != None):
+			# print(key)
+			results[key] = round(face_distance_to_conf(results[key]) * 100)
+		else:
+			empty_data_keys.append(key)
+	print(results, empty_data_keys)
+	for each in empty_data_keys:
+		del results[each]
+	print("Evaluation Completed.", results)
 	return results
 
 # print(evaluation())

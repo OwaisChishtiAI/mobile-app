@@ -18,7 +18,10 @@ import { ImagePicker } from 'react-file-picker'
 import Webcam from "react-webcam";
 import Badge from 'react-bootstrap/Badge'
 import LoadingOverlay from 'react-loading-overlay';
+import Serverip from './Serverip'
 
+var ip = Serverip.internetProtocolFunc();
+// console.log(ip);
 
 class DefaultModal extends React.Component {
     render() {
@@ -72,13 +75,14 @@ class CameraModal extends React.Component {
 		const dataUri = this.webcam.getScreenshot();
 		var querystring = require("querystring");
 		this.setState({showMsg : true})
-		axios.post('https://35.192.129.165:5000/selfie', querystring.stringify({ selfie: dataUri}))
+		axios.post(ip + 'selfie', querystring.stringify({ selfie: dataUri}))
 			.then(response => {
 				this.setState({showMsg : false})
 				if (response.status === 200 && response != null) {
 					if(response.data.status == 200){
 						// alert("Face Detected")
 						this.setState({selfie : dataUri, btn3Show : true, btn3Scs : true});
+						// this.props.setVar;
 					}
 					else{
 						// alert("No Face Detected.")
@@ -154,14 +158,14 @@ class MobileFaceApp extends React.Component {
 			btn0 : false,
 			btn0Scs : false,
 			btn0Show : false,
-			btn1 : true,
+			btn1 : false,
 			btn1Scs : false,
 			btn1Show : false,
-			btn2 : true,
+			btn2 : false,
 			btn2Scs : false,
 			btn2Show : false,
-			btn3 : true,
-			btn4 : true,
+			btn3 : false,
+			btn4 : false,
 			test_state : "owais",
 			eval_results: {
 			nicTonic : "owais",
@@ -172,12 +176,18 @@ class MobileFaceApp extends React.Component {
 			modalShow : false,
 			cameraShow : false,
 			loader : false,
+			CasenicF : false,
+			CasenicB : false,
+			Caseselfie : false,
+			Casevideo : false,
+			
 		}
 		// this.handleSubmit = this.handleSubmit.bind(this);
 		}
 
 	cameraClose = () => {
 		this.setState({ cameraShow: false });
+		this.setState({Caseselfie : true});
 	}
 
 	modalClose = () => {
@@ -188,12 +198,12 @@ class MobileFaceApp extends React.Component {
 	nicFrontUpload = (baseFile) => {
 		this.setState({nicF : baseFile, loader : true})
 		var querystring = require("querystring");
-		axios.post('https://35.192.129.165:5000/nicF', querystring.stringify({ nicF: this.state.nicF}))
+		axios.post(ip + 'nicF', querystring.stringify({ nicF: this.state.nicF}))
 			.then(response => {
 				this.setState({loader : false})
 				if (response.status === 200 && response != null) {
 					if(response.data.status == 200){
-						this.setState({btn0Scs : true, btn0Show : true, btn1 : false})
+						this.setState({btn0Scs : true, btn0Show : true, btn1 : false, CasenicF : true})
 						// alert("Face Detected")
 					}
 					else{
@@ -209,13 +219,13 @@ class MobileFaceApp extends React.Component {
 	nicBackUpload = (baseFile) => {
 		this.setState({nicB : baseFile, loader : true})
 		var querystring = require("querystring");
-		axios.post('https://35.192.129.165:5000/nicB', querystring.stringify({ nicF: this.state.nicB}))
+		axios.post(ip + 'nicB', querystring.stringify({ nicF: this.state.nicB}))
 			.then(response => {
 				this.setState({loader : false})
 				if (response.status === 200 && response != null) {
 					if(response.data.status == 200){
 						// alert("Face Detected")
-						this.setState({btn1Scs : true, btn1Show : true, btn2 : false})
+						this.setState({btn1Scs : true, btn1Show : true, btn2 : false, CasenicB : true})
 					}
 					else{
 						// alert("No Face Detected.")
@@ -247,12 +257,12 @@ class MobileFaceApp extends React.Component {
 		// console.log(this.state.selectedVideo); 
 		// console.log(this.state.selectedVideo.name);
 		
-		axios.post('https://35.192.129.165:5000/video', formData)
+		axios.post(ip + 'video', formData)
 			.then(response => {
 				this.setState({loader : false})
 				if (response.status === 200 && response != null) {
 					console.log("Video Uploaded")
-					this.setState({btn2Scs : true, btn2Show : true})
+					this.setState({btn2Scs : true, btn2Show : true, Casevideo : true})
 				}
 				else{
 					this.setState({btn2Scs : false, btn2Show : true})
@@ -277,7 +287,9 @@ class MobileFaceApp extends React.Component {
 			btn3 : true,
 			btn4 : true,
 		})
-		axios.get('https://35.192.129.165:5000/evaluate')
+
+		let params = "casenicf=" + this.state.CasenicF + "&casenicb=" + this.state.CasenicB + "&casevideo=" + this.state.Casevideo + "&caseselfie=" + this.state.Caseselfie
+		axios.get(ip + 'evaluate?' + params)
 			.then(response => {
 				if (response.status === 200 && response != null) {
 					let nicTonic_i = "";

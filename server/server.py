@@ -150,7 +150,13 @@ def videoFunc():
 
 @app.route("/evaluate", methods=["GET"])
 def evaFunc():
-	results = evaluation()
+	casenicf = request.args.get("casenicf")
+	casenicb = request.args.get("casenicb")
+	casevideo = request.args.get("casevideo")
+	caseselfie = request.args.get("caseselfie")
+	# print(casenicf, type(casenicf))
+	results = evaluation(casenicf, casenicb, casevideo, caseselfie)
+	# results=123
 	return jsonify({"results" : results})
 
 @app.route('/counter', methods=['GET'])
